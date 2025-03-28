@@ -5,6 +5,7 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 import rnn as rnn_lstm
+import matplotlib.pyplot as plt
 
 start_token = 'G'
 end_token = 'E'
@@ -120,6 +121,13 @@ def generate_batch(batch_size, poems_vec, word_to_int):
         y_batches.append(y_data)
     return x_batches, y_batches
 
+def plot_loss(losses, filename):
+    fig = plt.figure()
+    plt.plot(losses)
+    plt.xlabel('epochs')
+    plt.ylabel('loss')
+    plt.title('loss curve')
+    plt.savefig(filename)
 
 def run_training():
     # 处理数据集
@@ -139,9 +147,11 @@ def run_training():
     loss_fun = torch.nn.NLLLoss()
     # rnn_model.load_state_dict(torch.load('./poem_generator_rnn.pth'))  # if you have already trained your model you can load it by this line.
 
+    losses = []
     for epoch in range(30):
         batches_inputs, batches_outputs = generate_batch(BATCH_SIZE, poems_vector, word_to_int)
         n_chunk = len(batches_inputs)
+        batch_losses = []
         for batch in range(n_chunk):
             batch_x = batches_inputs[batch]
             batch_y = batches_outputs[batch] # (batch , time_step)
@@ -160,6 +170,7 @@ def run_training():
                     print('b_y       ', y.data.tolist())   # And you need to take a screenshot and then past is to your homework paper.
                     print('*' * 30)
             loss  = loss  / BATCH_SIZE
+            batch_losses.append(loss.item())
             print("epoch  ",epoch,'batch number',batch,"loss is: ", loss.data.tolist())
             optimizer.zero_grad()
             loss.backward()
@@ -169,6 +180,9 @@ def run_training():
             if batch % 20 ==0:
                 torch.save(rnn_model.state_dict(), './poem_generator_rnn.pth')
                 print("finish  save model")
+        batch_loss = np.mean(batch_losses)
+        losses.append(batch_loss)
+    plot_loss(losses, 'loss_curve.png')
 
 
 
@@ -228,8 +242,7 @@ pretty_print_poem(gen_poem("红"))
 pretty_print_poem(gen_poem("山"))
 pretty_print_poem(gen_poem("夜"))
 pretty_print_poem(gen_poem("湖"))
-pretty_print_poem(gen_poem("湖"))
-pretty_print_poem(gen_poem("湖"))
-pretty_print_poem(gen_poem("君"))
+pretty_print_poem(gen_poem("海"))
+pretty_print_poem(gen_poem("月"))
 
 
